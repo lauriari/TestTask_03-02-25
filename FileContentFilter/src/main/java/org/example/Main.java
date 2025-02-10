@@ -6,26 +6,58 @@ import java.util.Scanner;
 import java.io.File;
 
 public class Main {
+
+    static byte typeArgs(String args) {
+
+        if (args.equals("-p")) return 1;
+        if (args.equals("-o")) return 2;
+        if (args.equals("-a")) return 3;
+        if (args.equals("-s")) return 4;
+        if (args.equals("-f")) return 5;
+        return 6;
+
+    }
+
     public static void main(String[] args) {
 
-        FileContentFilter filter = new FileContentFilter();
+        FileContentFilter filter = null;
+        //        new FileContentFilter("res_", "11/22");
+        String way = null;
+        String pref = null;
+        boolean optionA = false;
+
         for (int i = 0; i < args.length; i++) {
-           // File file = new File(args[i]);
+
             System.out.printf("args-%d, i-%d, s-%s\n", args.length, i, args[i]);
-            try {
-                filter.work(args[i]);
-            }
-            catch (FileNotFoundException e){
-                System.err.println("Файл не найден: " + e.getMessage());
-            }
-            catch (IOException e){
-                System.err.println("Ошибка ввода-вывода: " + e.getMessage());
-            }
-            catch (Exception e) {
-                System.err.println("Неизвестная ошибка: " + e.getMessage());
+
+            switch (typeArgs(args[i])) {
+                case 1:
+                    i++;
+                    pref = args[i];
+                    break;
+                case 2:
+                    i++;
+                    way = args[i];
+                    break;
+                case 3:
+                    optionA = true;
+                    break;
+
+                default:
+                    if (filter == null) {
+                        filter = new FileContentFilter(pref, way, optionA);
+                    }
+                    try {
+                        filter.work(args[i]);
+                    } catch (FileNotFoundException e) {
+                        System.err.println("Файл не найден: " + e.getMessage());
+                    } catch (IOException e) {
+                        System.err.println("Ошибка ввода-вывода: " + e.getMessage());
+                    } catch (Exception e) {
+                        System.err.println("Неизвестная ошибка: " + e.getMessage());
+                    }
             }
         }
-
-       System.out.printf("Finish");
+        System.out.printf("Finish");
     }
 }

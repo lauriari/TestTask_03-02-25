@@ -6,17 +6,23 @@ import java.io.PrintWriter;
 import java.io.FileReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 class OurWriter {
     private File file = null;
+    private boolean optionA = false;
 
-    public OurWriter(String filename) {
+    public OurWriter(String filename, boolean a) {
         this.file = new File(filename);
+        this.optionA = a;
     }
 
     public void reWrite() throws IOException {
         try (FileReader reader = new FileReader("temp.txt");
-             PrintWriter writer = new PrintWriter(new FileWriter(file, true))) {
+             PrintWriter writer = new PrintWriter(new FileWriter(file, optionA))) {
+            optionA = true;
             int character;
             while ((character = reader.read()) != -1) {
                 writer.print((char) character);
@@ -193,10 +199,20 @@ public class FileContentFilter {
     private OurWriter writerDouble = null;
     private OurWriter writerString = null;
 
-    public FileContentFilter() {
-        writerInt = new OurWriter("integers.txt");
-        writerDouble = new OurWriter("double.txt");
-        writerString = new OurWriter("string.txt");
+    private Path way = null;
+
+
+    public FileContentFilter(String pref, String sWay, boolean optionA) {
+        String str = "";
+        if (pref != null) str = pref+str;
+        if (sWay != null) {
+            str = sWay+"/"+str;
+            this.way = Paths.get(sWay);
+        }
+        writerInt = new OurWriter(str+"integers.txt", optionA);
+        writerDouble = new OurWriter(str+"floats.txt", optionA);
+        writerString = new OurWriter(str+"strings.txt" , optionA);
+
     }
 
     public void work(String f) throws FileNotFoundException, IOException {
@@ -212,6 +228,9 @@ public class FileContentFilter {
                     character = reader.read();
                 }
                 tempFile.close();
+                if (way != null && !Files.exists(way)) {
+                    Files.createDirectories(way);
+                }
                 switch (checker.getType()) {
                     case 1:
                         writerInt.reWrite();

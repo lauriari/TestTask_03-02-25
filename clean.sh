@@ -1,3 +1,3 @@
 #!/bin/bash
-rm integers.txt double.txt string.txt
+rm integers.txt floats.txt strings.txt
 ls

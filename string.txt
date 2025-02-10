@@ -1,3 +1,0 @@
-Integer
-Double
-Integers test4.txt
