@@ -1,0 +1,10 @@
+Simple tests
+Integers test1
+Floats test1
+Just Strings
+Abc
+Jhgdgjefbgldfb gndkfjgnkdfn gjfdgkb fkjdgjbdfkj bgjbdfj lgbfd
+Hard tests
+Integers test2
+Hard tests
+Floats test3

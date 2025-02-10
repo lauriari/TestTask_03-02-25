@@ -56,7 +56,7 @@ class OurWriter implements IObservable {
              PrintWriter writer = new PrintWriter(new FileWriter(file, optionA))) {
             optionA = true;
             int character;
-            while ((character = reader.read()) != -1) {
+            while ((character = reader.read()) != -1 && character != '\n') {
                 writer.print((char) character);
             }
             writer.print('\n');
@@ -427,6 +427,9 @@ public class FileContentFilter {
                     tempFile.record((char) character);
                     checker.take(character);
                     character = reader.read();
+                }
+                if (character == '\n') {
+                    tempFile.record((char) character);
                 }
                 tempFile.close();
                 if (way != null && !Files.exists(way)) {

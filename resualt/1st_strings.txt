@@ -1,0 +1,3 @@
+Simple tests
+Integers test1
+Floats test1

@@ -2,8 +2,6 @@ package org.example;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Scanner;
-import java.io.File;
 
 public class Main {
 
@@ -70,6 +68,6 @@ public class Main {
         if (optionF) {
             filter.printFullStats();
         }
-        System.out.printf("Finish");
+     //   System.out.println("Finish");
     }
 }
