@@ -6,12 +6,15 @@ import java.io.PrintWriter;
 import java.io.FileReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.io.BufferedReader;
+import java.math.RoundingMode;
+
 
 interface IObserver {
     void update();
@@ -19,11 +22,12 @@ interface IObserver {
 
 interface IObservable {
     void addObserver(IObserver o);
+
     void updateNotify();
 
 }
 
-class OurWriter implements IObservable{
+class OurWriter implements IObservable {
     private File file = null;
     private boolean optionA = false;
     private List<IObserver> observers;
@@ -33,17 +37,19 @@ class OurWriter implements IObservable{
         this.optionA = a;
         observers = new ArrayList<>();
     }
+
     @Override
-    public void addObserver(IObserver o){
+    public void addObserver(IObserver o) {
         observers.add(o);
     }
 
     @Override
     public void updateNotify() {
-        for (Object o: observers.toArray()){
-            ((IObserver)o).update();
+        for (Object o : observers.toArray()) {
+            ((IObserver) o).update();
         }
     }
+
     public void reWrite() throws IOException {
         updateNotify();
         try (FileReader reader = new FileReader("temp.txt");
@@ -53,25 +59,27 @@ class OurWriter implements IObservable{
             while ((character = reader.read()) != -1) {
                 writer.print((char) character);
             }
-                writer.print('\n');
+            writer.print('\n');
         }
     }
 }
 
 class OurCounter implements IObserver {
-    private int count;
+    private long count;
     private String name;
-    public OurCounter (String s){
+
+    public OurCounter(String s) {
         count = 0;
         name = s;
     }
+
     @Override
-    public void update(){
+    public void update() {
         count++;
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return name + " - " + count + "\n";
     }
 
@@ -80,6 +88,7 @@ class OurCounter implements IObserver {
 class SaveTemp {
     private File filename = null;
     private PrintWriter writer = null;
+
     public SaveTemp(String f) {
         this.filename = new File(f);
     }
@@ -190,7 +199,7 @@ class CheckType {
                     }
                     break;
                 case 3:
-                    if (!exp2) {
+                    if (!exp2 && dot) {
                         exp = true;
                         exp2 = true;
                     } else {
@@ -217,7 +226,7 @@ class CheckType {
                 if (lastDigit > 0) {
                     return 2;
                 }
-            } else {                                     //1000000.123400000000
+            } else {
                 if (sign && lastDigit > expp) {
                     return 2;
                 }
@@ -238,6 +247,105 @@ class CheckType {
 
 }
 
+class FullStatsNumber implements IObserver {
+    private BigDecimal sum;
+    private BigDecimal min;
+    private BigDecimal max;
+    private BigDecimal current;
+    private String name;
+    private long count;
+
+    private boolean start;
+
+    public FullStatsNumber(String s) {
+        sum = new BigDecimal("0");
+        min = new BigDecimal("0");
+        max = new BigDecimal("0");
+        start = false;
+        count = 0;
+        name = s;
+    }
+
+    @Override
+    public void update() {
+        count++;
+        try (BufferedReader reader = new BufferedReader(new FileReader("temp.txt"))) {
+            String str = reader.readLine();
+            current = new BigDecimal(str);
+            if (!start) {
+                start = true;
+                min = current;
+                max = current;
+            } else {
+                min = min.min(current);
+                max = max.max(current);
+            }
+
+            sum = sum.add(current);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Full stats for " + name + "\n" + count + " elements\nmin=" + min + "\nmax=" + max + "\nsum=" + sum + "\naverage=" +
+                sum.divide(BigDecimal.valueOf(count), 3, RoundingMode.HALF_UP) + "\n";
+    }
+
+}
+
+class FullStatsString implements IObserver {
+
+    private long min;
+    private long max;
+    private long count;
+    private long current;
+    private String name;
+    private boolean start;
+
+    public FullStatsString(String s) {
+        min = 0;
+        max = 0;
+        count = 0;
+        current = 0;
+        name = s;
+        start = false;
+    }
+
+    @Override
+    public void update() {
+        count++;
+        try (FileReader reader = new FileReader("temp.txt")) {
+            while ((reader.read()) != -1) {
+                current++;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (!start) {
+            start = true;
+            min = current;
+            max = current;
+            current = 0;
+        } else {
+            if (current < min) {
+                min = current;
+            }
+            if (current > max) {
+                max = current;
+            }
+            current = 0;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Full stats for " + name + "\n" + count + "elements\nlenght(minStr)=" + min + "\nlenght(maxStr)=" + max + "\n";
+    }
+}
+
 public class FileContentFilter {
 
     private OurWriter writerInt = null;
@@ -248,20 +356,25 @@ public class FileContentFilter {
     private OurCounter counterFloat = null;
     private OurCounter counterString = null;
 
+    private FullStatsNumber fullInt = null;
+    private FullStatsNumber fullFloat = null;
+
+    private FullStatsString fullString = null;
+
     private Path way = null;
 
 
-    public FileContentFilter(String pref, String sWay, boolean optionA, boolean optionS) {
+    public FileContentFilter(String pref, String sWay, boolean optionA, boolean optionS, boolean optionF) {
         String str = "";
-        if (pref != null) str = pref+str;
+        if (pref != null) str = pref + str;
         if (sWay != null) {
-            str = sWay+"/"+str;
+            str = sWay + "/" + str;
             this.way = Paths.get(sWay);
         }
-        writerInt = new OurWriter(str+"integers.txt", optionA);
-        writerFloat = new OurWriter(str+"floats.txt", optionA);
-        writerString = new OurWriter(str+"strings.txt" , optionA);
-        if (optionS){
+        writerInt = new OurWriter(str + "integers.txt", optionA);
+        writerFloat = new OurWriter(str + "floats.txt", optionA);
+        writerString = new OurWriter(str + "strings.txt", optionA);
+        if (optionS) {
             counterInt = new OurCounter("Integers");
             writerInt.addObserver(counterInt);
             counterFloat = new OurCounter("Floats");
@@ -269,13 +382,38 @@ public class FileContentFilter {
             counterString = new OurCounter("Strings");
             writerString.addObserver(counterString);
         }
+        if (optionF) {
+            fullInt = new FullStatsNumber("Integers");
+            writerInt.addObserver(fullInt);
+            fullFloat = new FullStatsNumber("Floats");
+            writerFloat.addObserver(fullFloat);
+            fullString = new FullStatsString("Strings");
+            writerString.addObserver(fullString);
+        }
+
 
     }
 
-    public void printSmallStats (){
+    public void printSmallStats() {
         System.out.print(counterInt);
         System.out.print(counterFloat);
         System.out.print(counterString);
+    }
+
+    public void printFullStats() {
+        try {
+            System.out.print(fullInt);
+        }
+        catch (ArithmeticException e){
+            System.out.println("0 Integers elements");
+        }
+        try {
+            System.out.print(fullFloat);
+        }
+        catch (ArithmeticException e){
+            System.out.println("0 Float elements");
+        }
+        System.out.print(fullString);
     }
 
     public void work(String f) throws FileNotFoundException, IOException {

@@ -25,6 +25,7 @@ public class Main {
         String pref = null;
         boolean optionA = false;
         boolean optionS = false;
+        boolean optionF = false;
 
         for (int i = 0; i < args.length; i++) {
 
@@ -41,12 +42,16 @@ public class Main {
                     optionA = true;
                     break;
                 case 4:
-                    optionS = true;
+                    if (!optionF) {optionS = true;}
+                    break;
+                case 5:
+                    optionS = false;
+                    optionF = true;
                     break;
 
                 default:
                     if (filter == null) {
-                        filter = new FileContentFilter(pref, way, optionA, optionS);
+                        filter = new FileContentFilter(pref, way, optionA, optionS, optionF);
                     }
                     try {
                         filter.work(args[i]);
@@ -61,6 +66,9 @@ public class Main {
         }
         if (optionS) {
             filter.printSmallStats();
+        }
+        if (optionF) {
+            filter.printFullStats();
         }
         System.out.printf("Finish");
     }
