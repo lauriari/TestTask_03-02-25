@@ -9,17 +9,43 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
-class OurWriter {
+interface IObserver {
+    void update();
+}
+
+interface IObservable {
+    void addObserver(IObserver o);
+    void updateNotify();
+
+}
+
+class OurWriter implements IObservable{
     private File file = null;
     private boolean optionA = false;
+    private List<IObserver> observers;
 
     public OurWriter(String filename, boolean a) {
         this.file = new File(filename);
         this.optionA = a;
+        observers = new ArrayList<>();
+    }
+    @Override
+    public void addObserver(IObserver o){
+        observers.add(o);
     }
 
+    @Override
+    public void updateNotify() {
+        for (Object o: observers.toArray()){
+            ((IObserver)o).update();
+        }
+    }
     public void reWrite() throws IOException {
+        updateNotify();
         try (FileReader reader = new FileReader("temp.txt");
              PrintWriter writer = new PrintWriter(new FileWriter(file, optionA))) {
             optionA = true;
@@ -30,6 +56,25 @@ class OurWriter {
                 writer.print('\n');
         }
     }
+}
+
+class OurCounter implements IObserver {
+    private int count;
+    private String name;
+    public OurCounter (String s){
+        count = 0;
+        name = s;
+    }
+    @Override
+    public void update(){
+        count++;
+    }
+
+    @Override
+    public String toString(){
+        return name + " - " + count + "\n";
+    }
+
 }
 
 class SaveTemp {
@@ -196,13 +241,17 @@ class CheckType {
 public class FileContentFilter {
 
     private OurWriter writerInt = null;
-    private OurWriter writerDouble = null;
+    private OurWriter writerFloat = null;
     private OurWriter writerString = null;
+
+    private OurCounter counterInt = null;
+    private OurCounter counterFloat = null;
+    private OurCounter counterString = null;
 
     private Path way = null;
 
 
-    public FileContentFilter(String pref, String sWay, boolean optionA) {
+    public FileContentFilter(String pref, String sWay, boolean optionA, boolean optionS) {
         String str = "";
         if (pref != null) str = pref+str;
         if (sWay != null) {
@@ -210,9 +259,23 @@ public class FileContentFilter {
             this.way = Paths.get(sWay);
         }
         writerInt = new OurWriter(str+"integers.txt", optionA);
-        writerDouble = new OurWriter(str+"floats.txt", optionA);
+        writerFloat = new OurWriter(str+"floats.txt", optionA);
         writerString = new OurWriter(str+"strings.txt" , optionA);
+        if (optionS){
+            counterInt = new OurCounter("Integers");
+            writerInt.addObserver(counterInt);
+            counterFloat = new OurCounter("Floats");
+            writerFloat.addObserver(counterFloat);
+            counterString = new OurCounter("Strings");
+            writerString.addObserver(counterString);
+        }
 
+    }
+
+    public void printSmallStats (){
+        System.out.print(counterInt);
+        System.out.print(counterFloat);
+        System.out.print(counterString);
     }
 
     public void work(String f) throws FileNotFoundException, IOException {
@@ -236,7 +299,7 @@ public class FileContentFilter {
                         writerInt.reWrite();
                         break;
                     case 2:
-                        writerDouble.reWrite();
+                        writerFloat.reWrite();
                         break;
                     case 3:
                         writerString.reWrite();

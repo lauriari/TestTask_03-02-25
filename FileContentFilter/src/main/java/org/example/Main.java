@@ -21,14 +21,12 @@ public class Main {
     public static void main(String[] args) {
 
         FileContentFilter filter = null;
-        //        new FileContentFilter("res_", "11/22");
         String way = null;
         String pref = null;
         boolean optionA = false;
+        boolean optionS = false;
 
         for (int i = 0; i < args.length; i++) {
-
-            System.out.printf("args-%d, i-%d, s-%s\n", args.length, i, args[i]);
 
             switch (typeArgs(args[i])) {
                 case 1:
@@ -42,10 +40,13 @@ public class Main {
                 case 3:
                     optionA = true;
                     break;
+                case 4:
+                    optionS = true;
+                    break;
 
                 default:
                     if (filter == null) {
-                        filter = new FileContentFilter(pref, way, optionA);
+                        filter = new FileContentFilter(pref, way, optionA, optionS);
                     }
                     try {
                         filter.work(args[i]);
@@ -57,6 +58,9 @@ public class Main {
                         System.err.println("Неизвестная ошибка: " + e.getMessage());
                     }
             }
+        }
+        if (optionS) {
+            filter.printSmallStats();
         }
         System.out.printf("Finish");
     }
